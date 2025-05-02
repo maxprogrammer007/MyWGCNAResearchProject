@@ -1,0 +1,25 @@
+Package: MyWGCNAResearchProject
+Type: Package
+Title: Robust WGCNA Analysis & Shiny App
+Version: 0.1.0
+Authors@R: 
+    person("Your", "Name", email = "you@example.com", role = c("aut", "cre"))
+Description: Provides functions for robust WGCNA network construction, module detection,
+    dendrogram stability assessment, and an interactive Shiny interface.
+Depends: 
+    R (>= 4.1),
+    WGCNA,
+    dynamicTreeCut,
+    flashClust,
+    dendextend,
+    plotly,
+    ggdendro
+Imports:
+    stats,
+    utils,
+    DESeq2
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.1

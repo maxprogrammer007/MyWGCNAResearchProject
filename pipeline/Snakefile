@@ -1,0 +1,115 @@
+# pipeline/Snakefile
+
+import os
+
+# 1) Load config
+configfile: "config/default.yaml"
+
+# 2) Define output directories (ensure they exist)
+INTER   = "results/intermediate"
+PROC    = "results/processed"
+FIGS    = "results/figures"
+for d in [INTER, PROC, FIGS]:
+    os.makedirs(d, exist_ok=True)
+
+# 3) Default final targets
+rule all:
+    input:
+        # normalized expression
+        f"{INTER}/expr_norm.Rds",
+        # chosen power & its plot
+        f"{INTER}/power.Rds",
+        f"{FIGS}/soft_threshold.png",
+        # TOM matrix
+        f"{INTER}/tom.Rds",
+        # dendrogram & module‐color table
+        f"{FIGS}/dendrogram.png",
+        f"{PROC}/module_colors.tsv"
+
+# 4) Preprocessing: filter & normalize
+rule preprocess:
+    input:
+        raw = config["expr_file"]
+    output:
+        norm = f"{INTER}/expr_norm.Rds"
+    params:
+        method = config["norm_method"],
+        topN  = config["topN"]
+    shell:
+        """
+        Rscript pipeline/scripts/preprocess.R \
+          --input {input.raw} \
+          --output {output.norm} \
+          --method {params.method} \
+          --topN {params.topN}
+        """
+
+# 5) Soft‐threshold power selection
+rule pick_soft_threshold:
+    input:
+        norm = f"{INTER}/expr_norm.Rds"
+    output:
+        power = f"{INTER}/power.Rds",
+        plot  = f"{FIGS}/soft_threshold.png"
+    params:
+        powers      = "c(" + ",".join(map(str, config["powers"])) + ")",
+        networkType = config.get("tom_type", "unsigned"),
+        corType     = config.get("cor_type", "pearson")
+    shell:
+        """
+        Rscript pipeline/scripts/pick_soft_threshold.R \
+          --input {input.norm} \
+          --output-power {output.power} \
+          --output-plot {output.plot} \
+          --powers {params.powers} \
+          --networkType {params.networkType} \
+          --corType {params.corType}
+        """
+
+# 6) Build TOM
+rule build_tom:
+    input:
+        norm  = f"{INTER}/expr_norm.Rds",
+        power = f"{INTER}/power.Rds"
+    output:
+        tom   = f"{INTER}/tom.Rds"
+    params:
+        networkType = config.get("tom_type", "unsigned"),
+        corType     = config.get("cor_type", "pearson")
+    shell:
+        """
+        Rscript pipeline/scripts/build_tom.R \
+          --expr {input.norm} \
+          --power {input.power} \
+          --output {output.tom} \
+          --networkType {params.networkType} \
+          --corType {params.corType}
+        """
+
+# 7) Detect modules & plot dendrogram
+rule detect_modules:
+    input:
+        tom = f"{INTER}/tom.Rds"
+    output:
+        dendrogram = f"{FIGS}/dendrogram.png",
+        modules    = f"{PROC}/module_colors.tsv"
+    params:
+        deepSplit     = config["deep_split"],
+        minModSize    = config["min_module_size"],
+        mergeCutHeight= config["merge_height"],
+        outlierZ      = config["outlier_z"],
+        bootstrap     = str(config["bootstrap"]).upper(),
+        nBoot         = config["n_boot"]
+    shell:
+        """
+        Rscript pipeline/scripts/detect_modules.R \
+          --tom {input.tom} \
+          --out-plot {output.dendrogram} \
+          --out-modules {output.modules} \
+          --deepSplit {params.deepSplit} \
+          --minModuleSize {params.minModSize} \
+          --mergeCutHeight {params.mergeCutHeight} \
+          --outlierZ {params.outlierZ} \
+          --bootstrap {params.bootstrap} \
+          --nBoot {params.nBoot}
+        """

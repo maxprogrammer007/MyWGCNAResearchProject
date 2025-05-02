@@ -1,0 +1,27 @@
+# Export your core functions
+export(
+  loadExpressionData,
+  filterGenesByVariance,
+  detectOutlierSamples,
+  normalizeExpression,
+  pickSoftPower,
+  plotSoftPower,
+  constructNetwork,
+  detectModules,
+  mergeModules,
+  generateRobustDendrogram,
+  plotInteractiveDendrogram
+)
+
+# Import from other packages
+import(
+  WGCNA,
+  dynamicTreeCut,
+  flashClust,
+  dendextend,
+  plotly,
+  ggdendro,
+  DESeq2,
+  stats,
+  utils
+)
