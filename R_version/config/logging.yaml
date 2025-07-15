@@ -1,0 +1,3 @@
+# Logging configuration (used by src/utils.R:initLogging)
+logfile: "results/logs/pipeline.log"
+level:   "INFO"   # DEBUG | INFO | WARN | ERROR
