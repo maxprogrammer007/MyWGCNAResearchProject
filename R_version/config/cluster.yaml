@@ -1,0 +1,13 @@
+# Default settings for all Snakemake rules when running on an HPC scheduler
+__default__:
+  account: my_project
+  time:    "02:00:00"
+  ntasks:  1
+  mem:     "4G"
+
+# Override for heavier steps
+detect_modules:
+  account: my_project
+  time:    "04:00:00"
+  ntasks:  1
+  mem:     "16G"
